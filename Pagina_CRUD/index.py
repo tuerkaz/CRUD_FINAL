@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for, send_from_directory
 import MySQLdb
 import os
 from werkzeug.utils import secure_filename
@@ -16,6 +16,14 @@ cursor = conn.cursor()
 
 # Inicialización de Flask
 app = Flask(__name__)
+
+# Configuración de carpeta de subida para fotos
+UPLOAD_FOLDER = 'uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Asegurarse de que la carpeta de subidas exista
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 # Enlaces de navegación
 enlaces = [
@@ -45,16 +53,14 @@ def create():
 # Función para ejecutar consultas con manejo de reconexión
 def execute_query(query, params):
     try:
-        # Revisa si la conexión está activa; reconectar si es necesario
         conn.ping(True)
         cursor.execute(query, params)
         conn.commit()
     except MySQLdb.OperationalError as e:
         if e.args[0] == 2006:
-            # El servidor se ha ido: reconectar y volver a ejecutar la consulta
             print("Reconnecting to the database due to lost connection...")
-            conn.ping(True)  # Forzar la reconexión a la base de datos
-            cursor.execute(query, params)  # Reintentar la consulta
+            conn.ping(True)
+            cursor.execute(query, params)
             conn.commit()
         else:
             raise e
@@ -67,31 +73,11 @@ def data_create():
     document = request.form['document']
     address = request.form['address']
     cell = request.form['cell-phone']
-    photo = request.form['photo']
-
-    query = """INSERT INTO Employes (Nombre, Apellido, Documento, Direccion, Telefono, Foto)
-               VALUES (%s, %s, %s, %s, %s, LOAD_FILE(%s));"""
-    params = (name, last_name, document, address, cell, photo)
-
-    # Ejecutar la consulta con manejo de reconexión
-    execute_query(query, params)
-    return create()
-
-@app.route('/procesar', methods=['POST'])
-def data_create():
-    name = request.form['name']
-    last_name = request.form['last-name']
-    document = request.form['document']
-    address = request.form['address']
-    cell = request.form['cell-phone']
     
     # Guardar imagen en el sistema de archivos
     photo = request.files['photo']
     photo_filename = secure_filename(photo.filename)
-    upload_folder = 'uploads'  # Carpeta donde se guardarán las imágenes
-    if not os.path.exists(upload_folder):
-        os.makedirs(upload_folder)  # Crear carpeta si no existe
-    photo_path = os.path.join(upload_folder, photo_filename)
+    photo_path = os.path.join(app.config['UPLOAD_FOLDER'], photo_filename)
     photo.save(photo_path)  # Guardar la imagen
     
     # Guardar solo la ruta de la imagen en la base de datos
@@ -100,7 +86,12 @@ def data_create():
     params = (name, last_name, document, address, cell, photo_filename)
     
     execute_query(query, params)  # Ejecutar la consulta con manejo de reconexión
-    return create()
+    return redirect(url_for('create'))
+
+# Servir imágenes subidas
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 @app.route('/delete')
 def delete():
@@ -120,7 +111,6 @@ def selection_delete():
     if int(id_delete) < max_id:
         cursor.execute(f"UPDATE Employes SET Id = Id - 1 WHERE Id > {id_delete}")
     return delete()
-
 
 if __name__ == "__main__":
     app.run(debug=True, use_reloader=True, port=5001)
