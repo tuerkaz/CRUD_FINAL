@@ -1,27 +1,29 @@
-#Librerias
 from flask import Flask, render_template, request
-import MySQLdb #mysqlclient
+import MySQLdb
+import os
+from werkzeug.utils import secure_filename
 
-
-#Coneccion
+# Conexión a la base de datos con timeout y autocommit
 conn = MySQLdb.connect(
-    host= "bzhahp9gear4wppnvuw8-mysql.services.clever-cloud.com",
+    host="bzhahp9gear4wppnvuw8-mysql.services.clever-cloud.com",
     user="uenogooku1xj27kq",
     passwd="kJMRU7ehR4CWs81gsEBK",
-    db="bzhahp9gear4wppnvuw8"
+    db="bzhahp9gear4wppnvuw8",
+    connect_timeout=60,  # Aumenta el tiempo de espera de la conexión a 60 segundos
+    autocommit=True      # Activar autocommit
 )
 cursor = conn.cursor()
 
-#Inicailizacion de Fask
+# Inicialización de Flask
 app = Flask(__name__)
 
-#Lista
-enlaces=[
-    {"url":"/", "texto":"Home"},
-    {"url":"/create", "texto":"Create"},
-    {"url":"/read", "texto":"Read"},
-    {"url":"/update", "texto":"Update"},
-    {"url":"/delete", "texto":"Delete"}
+# Enlaces de navegación
+enlaces = [
+    {"url": "/", "texto": "Home"},
+    {"url": "/create", "texto": "Create"},
+    {"url": "/read", "texto": "Read"},
+    {"url": "/update", "texto": "Update"},
+    {"url": "/delete", "texto": "Delete"}
 ]
 
 def nombre_Columnas():
@@ -29,18 +31,35 @@ def nombre_Columnas():
     columns_DB = [column[0] for column in cursor.fetchall()]
     return columns_DB
 
-
+# Rutas de la aplicación
 @app.route('/')
 def init():
     enlaces_filtrados = [enlace for enlace in enlaces if enlace["url"] != "/"]
     return render_template('index.html', enlaces=enlaces_filtrados)
 
-
 @app.route('/create')
 def create():
-    enlaces_filtrados = [enlace for enlace in enlaces if enlace ["url"] != "/create"]
+    enlaces_filtrados = [enlace for enlace in enlaces if enlace["url"] != "/create"]
     return render_template('create.html', enlaces=enlaces_filtrados)
 
+# Función para ejecutar consultas con manejo de reconexión
+def execute_query(query, params):
+    try:
+        # Revisa si la conexión está activa; reconectar si es necesario
+        conn.ping(True)
+        cursor.execute(query, params)
+        conn.commit()
+    except MySQLdb.OperationalError as e:
+        if e.args[0] == 2006:
+            # El servidor se ha ido: reconectar y volver a ejecutar la consulta
+            print("Reconnecting to the database due to lost connection...")
+            conn.ping(True)  # Forzar la reconexión a la base de datos
+            cursor.execute(query, params)  # Reintentar la consulta
+            conn.commit()
+        else:
+            raise e
+
+# Ruta para procesar el formulario de creación de empleados
 @app.route('/procesar', methods=['POST'])
 def data_create():
     name = request.form['name']
@@ -49,75 +68,52 @@ def data_create():
     address = request.form['address']
     cell = request.form['cell-phone']
     photo = request.form['photo']
-    cursor.execute("""INSERT INTO Employes (Nombre, Apellido, Documento, Direccion, Telefono, Foto)
-    VALUES (%s, %s, %s, %s, %s, LOAD_FILE(%s));""", (name, last_name, document, address, cell, photo))
-    conn.commit()
+
+    query = """INSERT INTO Employes (Nombre, Apellido, Documento, Direccion, Telefono, Foto)
+               VALUES (%s, %s, %s, %s, %s, LOAD_FILE(%s));"""
+    params = (name, last_name, document, address, cell, photo)
+
+    # Ejecutar la consulta con manejo de reconexión
+    execute_query(query, params)
     return create()
 
-
-@app.route('/read')
-def read( condition_fulfied = "", tabla = ""):
-    enlaces_filtrados = [enlace for enlace in enlaces if enlace ["url"] != "/read"]
-    columns_DB = nombre_Columnas()
-    if condition_fulfied == "":
-        cursor.execute("SELECT * FROM Employes")
-        tabla = cursor.fetchall()
-    else:
-        tabla = condition_fulfied
-    return render_template('read.html', enlaces=enlaces_filtrados, columns_DB = columns_DB, tabla = tabla)
-
-@app.route('/column_selection', methods=['POST'])
-def column_select():
-    column = request.form['selection']
-    condition_record = request.form['condition_record']
-    if condition_record != "":
-        cursor.execute(f"SELECT * FROM Employes WHERE {column} = '{condition_record}'")
-    else:
-        cursor.execute("SELECT * FROM Employes")
-    condition_fulfied = cursor.fetchall()
-    print(condition_fulfied)
-    return read(condition_fulfied = condition_fulfied)
-
-
-@app.route('/update')
-def update(column = "", id = "", a = True):
-    enlaces_filtrados = [enlace for enlace in enlaces if enlace ["url"] != "/update"]
-    columns_DB = nombre_Columnas()
-    cursor.execute("SELECT * FROM Employes")
-    tabla = cursor.fetchall()
-    if column == "":
-        return render_template('update.html', enlaces=enlaces_filtrados, columns_DB = columns_DB, tabla = tabla)
-    else:
-        return render_template('update.html', enlaces=enlaces_filtrados, columns_DB = columns_DB, tabla = tabla, column = column, id = id, a = a)
-
-@app.route('/selection_modify', methods=['POST'])
-def selection_modify():
-    id = request.form['id_selection']
-    column = request.form['selection']
-    print(f"El id es {id} y la columna es {column}")
-    return update(column = column, id = id)
-
-@app.route('/remplace_value', methods=['POST'])
-def remplace_value():
-    new_value = request.form['new_value']
-    id = request.form['id']
-    column = request.form['column']
-    cursor.execute(f"UPDATE Employes SET {column} = '{new_value}' WHERE Id = {id}")
-    return update()
-
+@app.route('/procesar', methods=['POST'])
+def data_create():
+    name = request.form['name']
+    last_name = request.form['last-name']
+    document = request.form['document']
+    address = request.form['address']
+    cell = request.form['cell-phone']
+    
+    # Guardar imagen en el sistema de archivos
+    photo = request.files['photo']
+    photo_filename = secure_filename(photo.filename)
+    upload_folder = 'uploads'  # Carpeta donde se guardarán las imágenes
+    if not os.path.exists(upload_folder):
+        os.makedirs(upload_folder)  # Crear carpeta si no existe
+    photo_path = os.path.join(upload_folder, photo_filename)
+    photo.save(photo_path)  # Guardar la imagen
+    
+    # Guardar solo la ruta de la imagen en la base de datos
+    query = """INSERT INTO Employes (Nombre, Apellido, Documento, Direccion, Telefono, Foto)
+               VALUES (%s, %s, %s, %s, %s, %s);"""
+    params = (name, last_name, document, address, cell, photo_filename)
+    
+    execute_query(query, params)  # Ejecutar la consulta con manejo de reconexión
+    return create()
 
 @app.route('/delete')
 def delete():
-    enlaces_filtrados = [enlace for enlace in enlaces if enlace ["url"] != "/delete"]
+    enlaces_filtrados = [enlace for enlace in enlaces if enlace["url"] != "/delete"]
     columns_DB = nombre_Columnas()
     cursor.execute("SELECT * FROM Employes")
     tabla = cursor.fetchall()
-    return render_template('delete.html', enlaces=enlaces_filtrados, columns_DB = columns_DB, tabla = tabla)
+    return render_template('delete.html', enlaces=enlaces_filtrados, columns_DB=columns_DB, tabla=tabla)
 
 @app.route('/selection_delete', methods=['POST'])
 def selection_delete():
     id_delete = request.form['id_delete']
-    cursor.execute("SELECT  MAX(Id) FROM Employes")
+    cursor.execute("SELECT MAX(Id) FROM Employes")
     max_id = cursor.fetchall()[0][0]
     cursor.execute(f"DELETE FROM Employes WHERE Id = {id_delete}")
     cursor.execute(f"ALTER TABLE Employes AUTO_INCREMENT = {max_id - 1}")
@@ -127,7 +123,4 @@ def selection_delete():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, use_reloader=True)
-
-#cursor.close()
-#conn.close()
+    app.run(debug=True, use_reloader=True, port=5001)
