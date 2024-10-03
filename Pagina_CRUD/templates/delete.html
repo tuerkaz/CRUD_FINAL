@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %} Create {% endblock %}
+
+{% block main %}
+    <h1>Delete Employee</h1>
+    <table class="tabla">
+        <tr>
+            {% for column in columns_DB %}
+                <th>{{column}}</th>
+            {% endfor %}
+        </tr>
+        {% for record in tabla %}
+            <tr>
+                {% for cell in record %}
+                    <td>{{cell}}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
+    <form method="post" action="/selection_delete" class="delete">
+        <div class="id_delete">
+            <p>ID:</p>
+            <select name="id_delete" id="id">
+                {% for id in tabla%}
+                    <option value="{{id[0]}}">{{id[0]}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn_delete">Delete</button >
+    </form>
+{% endblock %}

@@ -1,0 +1,130 @@
+body,html{
+    width: 100%;
+    height: 100%;
+    margin: 0%;
+    padding: 0%;
+    font-family:monospace;
+    font-size: 110%;
+}
+
+/*header*/
+header, ul{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 1%;
+}
+header{
+    border-style:solid;
+    background-color: rgb(198, 29, 29);
+}
+body{
+    background-color: rgb(133, 133, 133);
+}
+.ul-nav{
+    gap: 20%;
+    list-style: none;
+    padding: 0% 10%;
+}
+a{
+    text-decoration: none;
+    color: black;
+}
+a:hover{
+    color: white;
+    font-weight: bold;
+}
+
+/*Home*/
+h1{
+    text-align: center;
+}
+.Section_Info{
+    padding: 0% 3%;
+    hr{
+        border: 1px solid black;
+        width: 50%;
+        margin-left: 0;
+    }
+    .Ref_Group{
+        margin-top: 2%;
+        border: solid black;
+        width: 20%;
+        .Studients{
+            margin-left: 10%;
+            display: block;
+            line-height: 150%;
+        }
+    }
+}
+
+
+/*Create*/
+.input_Employee{
+    display:block;
+    justify-content: center;
+    text-align: center;
+    .input_Name, .input_LastName, .input_document, .input_address, .input_cell-phone, .photo{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0% 30%;
+    }
+}
+input{
+    border-radius: 5px;
+}
+.btn_file{
+    display: none;
+}
+.btn_send, .btn, .btn_delete{
+    width: 10%;
+    height: 30px;
+    margin: 2% 0%;
+}
+
+/*Read*/
+.form_filter{
+    display: block;
+    text-align: center;
+    justify-content: center;
+}
+.filter, .id_delete{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0% 25%;
+}
+.id_delete{
+    padding: 0% 40%;
+}
+.update{
+    display: block;
+    padding: 0% 40%;
+    text-align: center;
+    justify-content: space-around;
+}
+.remplace, .delete{
+    padding:0% 30%;
+    text-align: center;
+}
+.new_value{
+    display: flex;
+    align-items: center;
+}
+.column_selection, .condition, .id_selection{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+table {
+    display: flex;
+    justify-content: center;
+    border-collapse: collapse;
+    margin: 2%;
+}
+th, td {
+    border-style: solid;
+    border-color: black;
+}

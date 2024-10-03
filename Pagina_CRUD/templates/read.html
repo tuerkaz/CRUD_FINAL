@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %} Create {% endblock %}
+
+{% block main %}
+    <h1>List Employees</h1>
+    <div>
+        <form method="post" action="/column_selection" class="form_filter">
+            <section class="filter">
+                <div class="column_selection">
+                <p>Filter by:</p> 
+                <select name="selection" id="column">
+                        {% for column in columns_DB %}
+                            <option value="{{column}}">{{column}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="condition">
+                    <p>Keyword:</p>
+                    <input name = "condition_record" type="text">
+                </div>
+            </section>
+            <button type="submit" class="btn">Filter</button>
+        </form>
+        <table class="tabla">
+            <tr>
+                {% for column in columns_DB %}
+                    <th>{{column}}</th>
+                {% endfor %}
+            </tr>
+            {% for record in tabla %}
+                <tr>
+                    {% for cell in record %}
+                        <th>{{cell}}</th>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+{% endblock %}

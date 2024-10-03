@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %} Create {% endblock %}
+
+{% block main %}
+    <h1>Update Employees</h1>
+    <table class="tabla">
+        <tr>
+            {% for column in columns_DB %}
+                <th>{{column}}</th>
+            {% endfor %}
+        </tr>
+        {% for record in tabla %}
+            <tr>
+                {% for cell in record %}
+                    <td>{{cell}}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </table>
+    <form method="post" action="/selection_modify" class="update">
+        <div class="id_selection">
+            <p>ID:</p>
+            <select name="id_selection" id="id">
+                {% for id in tabla%}
+                    <option value="{{id[0]}}">{{id[0]}}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="column_selection">
+            <p>Column Change:</p>
+            <select name="selection" id="column">
+                {% for column in columns_DB %}
+                    {% if column != "Id"%}
+                        <option value="{{column}}">{{column}}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit">Enter New Value</button>
+    </form>
+    {% if a %}
+        <form method="post" action="/remplace_value" class="remplace">
+            <div class="new_value">
+                <p>Column {{column}} of record {{id}} will be modified:</p>
+                {% if column == "Nombre"%}
+                    <input type="text" required="" placeholder="Name" name="new_value">
+                {% elif column == "Apellido"%}
+                    <input type="text" required="" placeholder="Last-Name" name="new_value">
+                {% elif column == "Documento"%}
+                    <input type="text" required="" pattern="[0-9]+" minlength="7" maxlength="10" placeholder="Document" name="new_value">
+                {% elif column == "Direccion"%}
+                    <input type="text" required="" placeholder="Address" name="new_value">
+                {% elif column == "Telefono"%}
+                    <input type="text" required="" pattern="[0-9]+"  minlength="10" maxlength="10" placeholder="Cell-Phone" name="new_value">
+                {% elif column == "Foto"%}
+                    <input type="file" accept=".jpg, .png, .img" required name="new_value">
+                {% endif %}
+                <input type="hidden" name="column" value="{{ column }}">
+                <input type="hidden" name="id" value="{{ id }}">
+            </div>
+            <button type="submit">Remplace Value</button>
+        </form>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,16 @@
+/*Se creo la Base de Datos en Clever Cloud*/
+
+CREATE TABLE Employes(
+	Id INTEGER PRIMARY KEY AUTO_INCREMENT,
+	Nombre VARCHAR(43) NOT NULL,
+	Apellido VARCHAR(35) NOT NULL,
+	Documento VARCHAR(50) NOT NULL UNIQUE,
+	Direccion VARCHAR(255) NOT NULL,
+	Telefono VARCHAR(15) NOT NULL,
+	Foto LONGBLOB	
+);
+INSERT INTO 
+	Employes(Nombre,Apellido,Documento,Direccion,Telefono,Foto) 
+VALUES 
+	('Camili','Pinto','1014241643','Cll 200 #1 - 44','3196543252',LOAD_FILE('/home/janpo/Descargas/foto-generica.jpg')),
+	('Juan','Garzón','28301123','Cll 100 #14 - 44','3114311232',LOAD_FILE('/home/janpo/Descargas/foto-generica.jpg'));

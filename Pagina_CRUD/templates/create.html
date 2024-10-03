@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %} Create {% endblock %}
+
+{% block main %}
+    <h1>Create Employee</h1>
+    <form method="post" action="/procesar"  class="input_Employee">
+        <div class="input_Name">
+            <h2>Name</h2>
+            <input type="text" required="" placeholder="Name" name="name">
+        </div>
+        <div class="input_LastName">
+            <h2>Last Name</h2>
+            <input type="text" required="" placeholder="Last-Name" name="last-name">
+        </div>
+        <div class="input_document">
+            <h2>Document</h2>
+            <input type="text" required="" pattern="[0-9]+" minlength="7" maxlength="10" placeholder="Document" name="document">
+        </div>
+        <div class="input_address">
+            <h2>address</h2>
+            <input type="text" required="" placeholder="Address" name="address">
+        </div>
+        <div class="input_cell-phone">
+            <h2>Cell Phone</h2>
+            <input type="text" required="" pattern="[0-9]+"  minlength="10" maxlength="10" placeholder="Cell-Phone" name="cell-phone">
+        </div>
+        <div class="photo">
+            <h2>Photo</h2>
+            <button>
+                <label for="id_boton">Select File</label>
+                <input type="file" accept=".jpg, .png, .img" required name="photo" class="btn_file" id="id_boton">
+            </button>
+        </div>
+        <button type="submit" class="btn_send">Send</button>
+    </form>
+{% endblock %}
